@@ -1,21 +1,19 @@
 /*
- * File:   main.c
+ * File:   main_button.c
  * Author: akirik
  *
  * Created on February 23, 2016, 12:52 PM
  * 
- * Blinking LED
+ * Switch and a LED
+ * Digital I/O
  * 
  *  Board connection (PICKit 2 Low Count Demo):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
  *  RC0 (DS1; J1->10)         LED
- *  RC1 (DS2; J1->11)         LED
- *  RC2 (DS3; J1->12)         LED
- *  RC3 (DS4; J1->6)          LED
  * 
  *  RA3/MCLR/VPP (SW1, J1->3) BUTTON    Please note that because this pin has MCLRE function as well
- *                                      So this program WILL NOT work plugged in to programmer!!!
+ *                                      So this program might not work plugged in to programmer!!!
  *                                      It should be plugged in into internal power source
  *                                      and config MCLRE should be set to OFF
  *
@@ -35,21 +33,23 @@ begins with a single underscore.
 
 // CONFIG
 // PIC16F690 Configuration Bit Settings
-#pragma config FOSC = HS        // Oscillator Selection bits (HS oscillator: High-speed crystal/resonator on RA4/OSC2/CLKOUT and RA5/OSC1/CLKIN)
-#pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled and can be enabled by SWDTEN bit of the WDTCON register)
-#pragma config PWRTE = OFF      // Power-up Timer Enable bit (PWRT disabled)
-#pragma config MCLRE = OFF      //!!! MCLR Pin Function Select bit (MCLR pin function is MCLR)
-#pragma config CP = OFF         // Code Protection bit (Program memory code protection is disabled)
-#pragma config CPD = OFF        // Data Code Protection bit (Data memory code protection is disabled)
-#pragma config BOREN = ON       // Brown-out Reset Selection bits (BOR enabled)
-#pragma config IESO = ON        // Internal External Switchover bit (Internal External Switchover mode is enabled)
-#pragma config FCMEN = ON       // Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
+#pragma config FOSC 	= HS		// Oscillator Selection bits (HS oscillator: High-speed crystal/resonator on RA4/OSC2/CLKOUT and RA5/OSC1/CLKIN)
+#pragma config WDTE 	= OFF       // Watchdog Timer Enable bit (WDT disabled and can be enabled by SWDTEN bit of the WDTCON register)
+#pragma config PWRTE 	= OFF      	// Power-up Timer Enable bit (PWRT disabled)
+#pragma config MCLRE 	= OFF      	//!!! MCLR Pin Function Select bit (MCLR pin function is MCLR)
+#pragma config CP 		= OFF       // Code Protection bit (Program memory code protection is disabled)
+#pragma config CPD 		= OFF       // Data Code Protection bit (Data memory code protection is disabled)
+#pragma config BOREN 	= ON       	// Brown-out Reset Selection bits (BOR enabled)
+#pragma config IESO 	= ON        // Internal External Switchover bit (Internal External Switchover mode is enabled)
+#pragma config FCMEN 	= ON       	// Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
 
 
 void system_init()
 {
     OSCCON=0x70;          // Select 8 Mhz internal clock
     
+	// To control Digital I/O use three registers: ANSEL, TRIS and PORT:
+
     // ANSELx registers
 	// ANSEL and ANSELH control the mode of AN0 through AN11:
 	// 0 sets the pin to digital mode and 1 sets the pin to analog mode.
@@ -65,7 +65,7 @@ void system_init()
      */
         ANSEL = 0x00;         // Set PORT ANS0 to ANS7 as Digital I/O
         ANSELH = 0x00;        // Set PORT ANS8 to ANS11 as Digital I/O
-        ANSELbits.ANS3 = 0;   //digital switch (redundant)
+        ANSELbits.ANS3 = 0;   //digital switch (redundant, just to show another method to set)
   
     // TRISx registers (This register specifies the data direction of each pin)
     /* 
@@ -82,10 +82,10 @@ void system_init()
      * TRIS:   --|TRIS?7|TRIS?6|TRIS?5|TRIS?4|TRIS?3|TRIS?2|TRIS?1|TRIS?0|--
      * ---------------------------------------------------------------------
      */
-        TRISA = 0b00001000;       // Set All on PORTB as Output, except A3 which is set to Input   
+        TRISA = 0b00001000;       // Set All on PORTB as Output, and A3 is set as Input   
         TRISB = 0x00;             // Set All on PORTB as Output    
         TRISC = 0x00;             // Set All on PORTC as Output    
-        TRISAbits.TRISA3 = 1;     //switch as input (redundant)
+        TRISAbits.TRISA3 = 1;     //switch as input (redundant, just to show another method to set)
     
     // PORT registers (hold the current digital state of the digital I/O)
     // If you read these registers, you can determine which pins are currently HIGH or LOW
@@ -95,7 +95,7 @@ void system_init()
         PORTB = 0x00;         // Set PORTB all 0
         PORTC = 0x00;         // Set PORTC all 0
         
-    // initial state of LED (off) - No need to do it, just to show another method
+    // initial state of LED - OFF (redundant, just to show another method to set)
         PORTCbits.RC0 = 0;
 }
 
@@ -115,7 +115,7 @@ void main(void)
         }
         else
             PORTCbits.RC0 = 0;
-         */                          
+        */                          
     }
     
   return;

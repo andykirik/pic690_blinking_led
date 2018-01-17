@@ -1,10 +1,10 @@
 /*
- * File:   main.c
+ * File:   main_adc.c
  * Author: akirik
  *
  * Created on February 23, 2016, 12:52 PM
  * 
- * Blinking LED
+ * Analog to Digital Converter (ADC)
  * 
  *  Board connection (PICKit 2 Low Count Demo):
  *   PIN                	Module                         				  
@@ -51,36 +51,42 @@ void system_init()
 {
     OSCCON=0x70;          // Select 8 Mhz internal clock
     
-    // ANSELx registers
-        ANSEL = 0x00;         // Set PORT ANS0 to ANS7 as Digital I/O
-        ANSELH = 0x00;        // Set PORT ANS8 to ANS11 as Digital I/O
-        ANSELbits.ANS0 = 1;   // Set RA0/AN0 to analog mode
-  
-    // TRISx registers (This register specifies the data direction of each pin)
-        TRISA = 0x00;         // Set All on PORTB as Output    
-        TRISB = 0x00;         // Set All on PORTB as Output    
-        TRISC = 0x00;         // Set All on PORTC as Output    
-        TRISAbits.TRISA0 = 1; // Disable the output driver for pin RA0/AN0
-    
-    // PORT registers
-        PORTA = 0x00;         // Set PORTA all 0
-        PORTB = 0x00;         // Set PORTB all 0
-        PORTC = 0x00;         // Set PORTC all 0
+	// I/O
+		// ANSELx registers
+			ANSEL = 0x00;         // Set PORT ANS0 to ANS7 as Digital I/O
+			ANSELH = 0x00;        // Set PORT ANS8 to ANS11 as Digital I/O
+			ANSELbits.ANS0 = 1;   // Set RA0/AN0 to analog mode
+	  
+		// TRISx registers (This register specifies the data direction of each pin)
+			TRISA = 0x00;         // Set All on PORTB as Output    
+			TRISB = 0x00;         // Set All on PORTB as Output    
+			TRISC = 0x00;         // Set All on PORTC as Output    
+			TRISAbits.TRISA0 = 1; // Disable the output driver for pin RA0/AN0
+		
+		// PORT registers
+			PORTA = 0x00;         // Set PORTA all 0
+			PORTB = 0x00;         // Set PORTB all 0
+			PORTC = 0x00;         // Set PORTC all 0
         
-    // set the ADC to the options selected in the User Interface
-        ADCON0bits.ADFM = 1;    //ADC result is right justified
-        ADCON0bits.VCFG = 0;    //Vdd is the +ve reference
-        ADCON1bits.ADCS = 0b001;//Fosc/8 is the conversion clock
-                                //This is selected because the conversion
-                                //clock period (Tad) must be greater than 1.5us.
-                                //With a Fosc of 4MHz, Fosc/8 results in a Tad
-                                //of 2us.
-        ADCON0bits.CHS = PIN_A0;//select analog input, AN0
-        ADCON0bits.ADON = 1;    //Turn on the ADC
-        ADRESL = 0x00;
-        ADRESH = 0x00;
+    // ADC setup
+	// The PIC16F690 has a 10-bit ADC
+	// It provides value 0 to 1023 as the input voltage rises from Vss to Vref
+	// Vref is the analog reference voltage. 
+	// It can either be Vdd or supplied externally to the RA1/AN1/Vref pin
+	// The PIC16F690 has twelve analog input pins (AN0 through AN11). 
+	// In order to enable the analog function for a pin, 
+	// the corresponding bit must be set in the ANSEL or ANSELH register (see above).
+        ADCON0bits.ADFM = 1;   		// ADC result is right justified
+        ADCON0bits.VCFG = 0;    	// Vref uses Vdd as reference
+        ADCON1bits.ADCS = 0b001;	// Fosc/8 is the conversion clock
+									//   This is selected because the conversion
+									//   clock period (Tad) must be greater than 1.5us.
+									//   With a Fosc of 4MHz, Fosc/8 results in a Tad
+									//   of 2us.
+        ADCON0bits.CHS = PIN_A0;	// Select analog input - AN0
+        ADCON0bits.ADON = 1;    	// Turn on the ADC
         
-    // initial state of LEDs (off)
+    // initial state of LED - OFF (redundant, just to show another method to set)
         PORTCbits.RC0 = 0;
         PORTCbits.RC1 = 0;
         PORTCbits.RC2 = 0;
@@ -89,41 +95,41 @@ void system_init()
 
 uint16_t ADC_GetConversion()
 {
-    // Acquisition time delay
-    __delay_us(ACQ_US_DELAY);
-
-    // Start the conversion
-    ADCON0bits.GO_nDONE = 1;
-
-    // Wait for the conversion to finish
-    while (ADCON0bits.GO_nDONE);
-
-    // Conversion finished, return the result
-    return ((uint16_t)((ADRESH << 8) + ADRESL));
+    __delay_us(ACQ_US_DELAY);					// Acquisition time delay
+    ADCON0bits.GO_nDONE = 1;					// Start the conversion
+    while (ADCON0bits.GO_nDONE);				// Wait for the conversion to finish
+    return ((uint16_t)((ADRESH << 8) + ADRESL));// Conversion finished, return the result
 }
 
 void main(void) 
 {
     system_init();
     
-    uint8_t adcResult;
     while(1)  
 	{
-        //Get the top 4 MSBs and display it on the LEDs
-        adcResult = ADC_GetConversion();// >> 12;
-        
-        if(adcResult > 512)
-            PORTCbits.RC0 = 1;      //turn on the LED if the input voltage is above Vdd/2
-        else
-            PORTCbits.RC0 = 0;      //otherwise turn off the LED
-
-        /*/Determine which LEDs will light up
-        PORTCbits.RC0 =  adcResult & 1;
-        PORTCbits.RC1 = (adcResult & 2) >> 1;
-        PORTCbits.RC2 = (adcResult & 4) >> 2;
-        PORTCbits.RC3 = (adcResult & 8) >> 3;*/
-        
-        PORTCbits.RC3 = 1;
+        uint16_t adcResult = ADC_GetConversion();
+                
+        //PORTCbits.RC0 = adcResult > 512 ? 1 : 0;// Turn on the LED if the input voltage is above Vdd/2
+		//__delay_ms(50);                         // sleep 50 milliseconds
+		
+		PORTCbits.RC0 = 0;
+        PORTCbits.RC1 = 0;
+        PORTCbits.RC2 = 0;
+        PORTCbits.RC3 = 0;
+		
+        if(adcResult > 256) {
+            PORTCbits.RC0 = 1;
+        } 
+        if(adcResult > 512)  {
+            PORTCbits.RC1 = 1;
+        } 
+        if(adcResult > 768)  {
+            PORTCbits.RC2 = 1;
+        }
+        if(adcResult > 1000)  {
+            PORTCbits.RC3 = 1;      
+        }
+		__delay_ms(50);                         // sleep 50 milliseconds
     }
     
   return;

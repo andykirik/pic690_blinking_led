@@ -5,6 +5,7 @@
  * Created on February 23, 2016, 12:52 PM
  * 
  * Blinking LED
+ * Digital I/O
  * 
  *   PIN                	Module                         				  
  * -------------------------------------------                        
@@ -43,6 +44,8 @@ begins with a single underscore.
 void system_init()
 {
     OSCCON=0x70;          // Select 8 Mhz internal clock
+	
+	// To control Digital I/O use three registers: ANSEL, TRIS and PORT:
 
     // ANSELx registers
 	// ANSEL and ANSELH control the mode of AN0 through AN11:
@@ -60,7 +63,9 @@ void system_init()
         ANSEL = 0x00;         // Set PORT ANS0 to ANS7  as Digital I/O
         ANSELH = 0x00;        // Set PORT ANS8 to ANS11 as Digital I/O
   
-    // TRISx registers (This register specifies the data direction of each pin)
+    // TRISx registers
+	// This register specifies the data direction of each pin:
+	// O - output, 1 - input
     /* 
 	 * -------------------TRISA---------------------------------------------
      * Bit#:   ---7-------6------5------4------3------2------1------0-------
@@ -79,7 +84,8 @@ void system_init()
         TRISB = 0x00;         // Set All on PORTB as Output    
         TRISC = 0x00;         // Set All on PORTC as Output    
     
-    // PORT registers (hold the current digital state of the digital I/O)
+    // PORT registers 
+	// Hold the current digital state of the digital I/O
     // If you read these registers, you can determine which pins are currently HIGH or LOW
     // Writing to the PORTX registers will set the digital output latches. 
     // Writing to a pin that is currently an input will have no effect on the pin because the output latch will be disabled.
@@ -87,14 +93,14 @@ void system_init()
         PORTB = 0x00;         // Set PORTB all 0
         PORTC = 0x00;         // Set PORTC all 0
     
-    // initial state of LEDs (off) - No need to do it, just to show another method
+    // initial state of LEDs - OFF (redundant, just to show another method to set)
         PORTCbits.RC0 = 0;
         PORTCbits.RC1 = 0;
         PORTCbits.RC2 = 0;
         PORTCbits.RC3 = 0;
 }
 
-static int mode = 1; // 0 - blink; 1 - rotate
+static int mode = 1; // 0 - blink; 1 - rotate (need to be recompiled to change modes)
 
 void main(void) 
 {
@@ -107,11 +113,11 @@ void main(void)
             // turn on and off
             while(1)  
             {
-                PORTCbits.RC0 = ~PORTCbits.RC0;   // flip 
-                PORTCbits.RC1 = ~PORTCbits.RC1;   // flip
-                PORTCbits.RC2 = ~PORTCbits.RC2;   // flip
-                PORTCbits.RC3 = ~PORTCbits.RC3;   // flip
-                __delay_ms(2000);                   // sleep 2 seconds
+                PORTCbits.RC0 = ~PORTCbits.RC0;   // Toggle the LED 
+                PORTCbits.RC1 = ~PORTCbits.RC1;   // Toggle the LED
+                PORTCbits.RC2 = ~PORTCbits.RC2;   // Toggle the LED
+                PORTCbits.RC3 = ~PORTCbits.RC3;   // Toggle the LED
+                __delay_ms(2000);                 // sleep 2 seconds
             }
         }
         else
