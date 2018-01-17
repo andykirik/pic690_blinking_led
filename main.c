@@ -6,7 +6,6 @@
  * 
  * Blinking LED
  * 
- *  Board connection (PICKit 2 Low Count Demo):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
  *  RC0 (DS1; J1->10)         LED
@@ -15,8 +14,6 @@
  *  RC3 (DS4; J1->6)          LED
  *
  */
-
-#include <xc.h>
 
 /* The __delay_ms() function is provided by XC8. 
 It requires you define _XTAL_FREQ as the frequency of your system clock. 
@@ -27,6 +24,8 @@ Note that __delay_ms() and __delay_us() begin with a double underscore whereas _
 begins with a single underscore.
 */
 #define _XTAL_FREQ 8000000
+
+#include <xc.h>
 
 // CONFIG
 // PIC16F690 Configuration Bit Settings
@@ -135,5 +134,5 @@ void main(void)
         }
     }
     
-  return;
+	return;
 }
