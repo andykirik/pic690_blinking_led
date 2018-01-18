@@ -40,6 +40,23 @@ begins with a single underscore.
 #pragma config IESO 	= ON        // Internal External Switchover bit (Internal External Switchover mode is enabled)
 #pragma config FCMEN 	= ON       	// Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
 
+#define EXTENDED_DELAY
+
+#ifdef EXTENDED_DELAY
+#define TIMER_RESET_VALUE 6 // To set up the timer for a period of 1 ms (timerPeriod)
+                            // Calculated by the formula:
+                            // TMR0 = 256 - ((timerPeriod * Fosc) / (4 * prescaler)) + x
+                            // TMR1 = 65536 - ((timerPeriod * Fosc) / (4 * prescaler)) + x
+
+                            // In following case,   timerPeriod = 0.001s
+                            //                      Fosc = 4,000,000
+                            //                      prescaler = 4
+                            //                      x = 0 because prescaler is > 2
+
+                            // TMR0 = 256 - (0.001 * 4000000) / (4 * 4) = 6
+
+int delayTime = 0;          // store the time that has elapsed
+#endif
 
 void system_init()
 {
@@ -60,17 +77,31 @@ void system_init()
 			PORTB = 0x00;         // Set PORTB all 0
 			PORTC = 0x00;         // Set PORTC all 0
         
-	// Timer Setup
-	// Use Timer 0
-		OPTION_REGbits.PSA = 0; 	// Prescaler assigned to Timer 0 (other option is to
-									//   the Watchdog timer (WDT))
+	// Timer Setup - Timer 0
+    /* A prescaler is a circuit that reduces the frequency of a clock using integer division. 
+     *  The prescaler can be set anywhere from 1:2 to 1:256 for Timer 0.
+     *  The clock we are slowing down is NOT the system clock Fosc (4MHz as in here). 
+     *  It's the system's instruction clock Fcy, which is always Fosc/4.
+     *  The timer expires when the TMR0 register rolls over. 
+     *  The TMR0 register is an 8bit register, therefore it will roll over after 256 counts.
+     *  Rollover Frequency = Fosc / (4 * prescaler * 256)
+     *  In following case it would be 15.2588Hz or 0.0655 seconds per rollover.
+    */
+		OPTION_REGbits.PSA = 0; 	// Prescaler assigned to Timer 0 
+#ifdef EXTENDED_DELAY
+        OPTION_REGbits.PS = 0b001;  // Set the prescaler to 1:4
+#else
 		OPTION_REGbits.PS = 0b111;  // Set the prescaler to 1:256
-		OPTION_REGbits.T0CS = 0;    // Use the instruction clock (Fcy/4) as the timer
-									//   clock. Other option is an external oscillator
-									//   or clock on the T0CKI pin.
+#endif
+		OPTION_REGbits.T0CS = 0;    // Use the instruction clock (Fcy/4) as the timer clock. 
+									//   Other option is an external oscillator or clock on the T0CKI pin.
         INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
 		INTCONbits.T0IF = 0;        // Clear the Timer 0 interrupt flag
-		TMR0 = 0;                   // Load a value of 0 into the timer
+#ifdef EXTENDED_DELAY
+		TMR0 = TIMER_RESET_VALUE;   // Load the starting value back into the timer
+#else
+        TMR0 = 0;                   // Load a value of 0 into the timer
+#endif
 
 	// Interrupt setup
 		INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
@@ -85,10 +116,22 @@ void system_init()
 void interrupt isr()
 {
     INTCONbits.T0IF = 0;    // Clear the Timer 0 interrupt flag
+#ifdef EXTENDED_DELAY
+    TMR0 = TIMER_RESET_VALUE;   // Load the starting value back into the timer
+#else
     TMR0 = 0;               // Load a value of 0 into the timer
                             //   This is actually not necessary since the register will be at 0 anyway after rolling over
-
-    PORTCbits.RC3 = ~PORTCbits.RC3; // Toggle the LED
+#endif
+    
+#ifdef EXTENDED_DELAY
+    if(++delayTime >= 5000) // 5 seconds has elapsed
+    {
+        delayTime = 0;
+#endif
+        PORTCbits.RC3 = ~PORTCbits.RC3; // Toggle the LED
+#ifdef EXTENDED_DELAY    
+    }
+#endif
 }
 
 void main(void) 

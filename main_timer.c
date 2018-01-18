@@ -57,13 +57,21 @@ void system_init()
 			PORTB = 0x00;         // Set PORTB all 0
 			PORTC = 0x00;         // Set PORTC all 0
         
-	// Timer Setup
-	// Use Timer 0
+	// Timer Setup - Timer 0
+    /* A prescaler is a circuit that reduces the frequency of a clock using integer division. 
+     *  The prescaler can be set anywhere from 1:2 to 1:256 for Timer 0.
+     *  The clock we are slowing down is NOT the system clock Fosc (4MHz as in here). 
+     *  It's the system's instruction clock Fcy, which is always Fosc/4.
+     *  The timer expires when the TMR0 register rolls over. 
+     *  The TMR0 register is an 8bit register, therefore it will roll over after 256 counts.
+     *  Rollover Frequency = Fosc / (4 * prescaler * 256)
+     *  In following case it would be 15.2588Hz or 0.0655 seconds per rollover.
+    */
 		OPTION_REGbits.PSA = 0; 	// Prescaler assigned to Timer 0
 		OPTION_REGbits.PS = 0b111;  // Set the prescaler to 1:256
 		OPTION_REGbits.T0CS = 0;    // Use the instruction clock (Fcy/4) as the timer clock. 
 									//   Other option is an external oscillator or clock on the T0CKI pin.
-        INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
+        //INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
 }
 
 void main(void) 

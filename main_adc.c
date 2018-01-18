@@ -61,7 +61,7 @@ void system_init()
 			TRISA = 0x00;         // Set All on PORTB as Output    
 			TRISB = 0x00;         // Set All on PORTB as Output    
 			TRISC = 0x00;         // Set All on PORTC as Output    
-			TRISAbits.TRISA0 = 1; // Disable the output driver for pin RA0/AN0
+			TRISAbits.TRISA0 = 1; // Set RA0/AN0 as Input
 		
 		// PORT registers
 			PORTA = 0x00;         // Set PORTA all 0
@@ -76,6 +76,74 @@ void system_init()
 	// The PIC16F690 has twelve analog input pins (AN0 through AN11). 
 	// In order to enable the analog function for a pin, 
 	// the corresponding bit must be set in the ANSEL or ANSELH register (see above).
+    /* 
+     * -------------------ADC---------------------------------
+     * Bit#:  ----7----6----5----4----3----2----1-------0-----
+     * ANS:   --|ADFM|VCFG|CHS3|CHS2|CHS1|CHS0|GO/DONE|ADON|--
+     * -------------------------------------------------------
+        ADFM - result format: 0 - left justified (default), 1 - right justified:
+            * -------------------------ADRESH------------------------|-------------------ADRESL-----------------------
+            * Bit#:  ---7-----6-----5-----4-----3-----2-----1-----0--|--7-----6-----5-----4-----3-----2-----1-----0---
+            * bit:   |  0  |  0  |  0  |  0  |  0  |  0  |bit-9|bit-8|bit-7|bit-6|bit-5|bit-4|bit-3|bit-2|bit-1|bit-0|
+            * --------------------------------------------------------------------------------------------------------
+            result = (ADRESH<<8)+ADRESL;
+
+            * -------------------------ADRESH------------------------|-------------------ADRESL-----------------------
+            * Bit#:  ---7-----6-----5-----4-----3-----2-----1-----0--|--7-----6-----5-----4-----3-----2-----1-----0---
+            * bit:   |bit-9|bit-8|bit-7|bit-6|bit-5|bit-4|bit-3|bit-2|bit-1|bit-0|  0  |  0  |  0  |  0  |  0  |  0  |
+            * --------------------------------------------------------------------------------------------------------
+            This is useful if only the 8 most significant bits are required. 
+            In this case, we just simply copy the contens of the ADRESH register.
+      
+        VCFG - Voltage reference (Vref): 0 - Vdd, 1 - Vref pin     
+      
+        CHS<3:0> - channel select: This selects which voltage is fed into the ADC. 
+            Setting this 0 to 11 selects AN0 to AN11 respectively. 
+            Setting 12 feeds CVref (Comparator voltage reference). 
+            Setting 13 connects the 0.6V fixed voltage reference from the
+            Comparator module to the ADC.
+
+        GO/DONE: 1 to start ADC conversion. 
+            Be sure to wait at least 5us before doing this after changing 
+            the input channel or performing a previous conversion.
+            This bit is read to see if the current conversion is complete.
+            The ADC will automatically reset this bit to 0 when conversion finishes.
+
+        ADON - ADC enable bit: 0 - ADC disabled and consumes no current, 1 - ADC enabled.
+     
+     * -------------------ADCON1-------------------------
+     * Bit#:  ----7----6-----5-----4----3---2---1---0----
+     * ANS:   --| 0 |ADCS2|ADCS1|ADCS0| 0 | 0 | 0 | 0 |--
+     * --------------------------------------------------
+        ADCS<2:0> - ADC clock select:
+            0b000 = Fosc/2
+            0b001 = Fosc/8
+            0b010 = Fosc/32
+            0b011 or 0b111 = FRC (internal oscillator)
+            0b100 = Fosc/4
+            0b101 = Fosc/16
+            0b110 = Fosc/64
+          
+     ADC could be user with interrupts
+        In order to use the ADC interrupts, the GIE (Global Interrupt Enable) 
+        and PEIE (Peripheral Interrupt Enable) bits in the INTCON register must be set to 1.
+     
+        * -------------------PIE1-----------------------------------
+        * Bit#:  ----7----6----5---4-----3-----2------1------0------
+        * ANS:   --| 0 |ADIE|RCIE|TXIE|SSPIE|CCP1IE|TMR2IE|TMR1IE|--
+        * ----------------------------------------------------------
+           ADIE - ADC interrupt enable. 
+               Set to 1 to generate interrupts when ADC is completed
+        
+        * -------------------PIR1-----------------------------------
+        * Bit#:  ----7----6---5----4----3------2------1------0------
+        * ANS:   --| 0 |ADIF|RCIF|TXIF|SSPIF|CCP1IF|TMR2IF|TMR1IF|--
+        * ----------------------------------------------------------
+           ADIF - ADC interrupt flag. 
+               This will be set to 1 by the ADC when a conversion completes. 
+               This must be cleared by software in the interrupt service routine 
+               to prepare the interrupt flag for the next conversion.
+    */
         ADCON0bits.ADFM = 1;   		// ADC result is right justified
         ADCON0bits.VCFG = 0;    	// Vref uses Vdd as reference
         ADCON1bits.ADCS = 0b001;	// Fosc/8 is the conversion clock

@@ -7,6 +7,7 @@
  * Blinking LED
  * Digital I/O
  * 
+ *  Board connection (PICKit 2 Low Count Demo):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
  *  RC0 (DS1; J1->10)         LED
