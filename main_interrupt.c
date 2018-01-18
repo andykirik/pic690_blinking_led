@@ -60,20 +60,21 @@ void system_init()
 			PORTB = 0x00;         // Set PORTB all 0
 			PORTC = 0x00;         // Set PORTC all 0
         
-	// Timer Setup
-	// Use Timer 0
-		OPTION_REGbits.PSA = 0; 	// Prescaler assigned to Timer 0 (other option is to
-									//   the Watchdog timer (WDT))
-		OPTION_REGbits.PS = 0b111;  // Set the prescaler to 1:256
-		OPTION_REGbits.T0CS = 0;    // Use the instruction clock (Fcy/4) as the timer
-									//   clock. Other option is an external oscillator
-									//   or clock on the T0CKI pin.
-        INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
-		INTCONbits.T0IF = 0;        // Clear the Timer 0 interrupt flag
-		TMR0 = 0;                   // Load a value of 0 into the timer
-
 	// Interrupt setup
-		INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
+    /* 
+     * -------------------INTCON----------------------------
+     * Bit#:  ----7----6----5----4----3----2----1----0------
+     *        --|GIE|PEIE|T0IE|INTE|RABIE|T0IF|INTF|RABIF|--
+     * -----------------------------------------------------
+     * 
+     * -------------------OPTION_REG----------------------
+     * Bit#:  ----7------6-----5----4----3---2---1---0----
+     *        --|RABPU|INTEDG|T0CS|T0SE|PSA|PS2|PS1|PS0|--
+     * ---------------------------------------------------
+    */
+        INTCONbits.INTF = 0;        // Reset the external interrupt flag
+        OPTION_REGbits.INTEDG = 1;  // Interrupt on the rising edge
+		INTCONbits.INTE = 1;        // Enable external interrupt
 		INTCONbits.GIE = 1;         // Set the Global Interrupt Enable
 }
 
@@ -84,11 +85,13 @@ void system_init()
  */
 void interrupt isr()
 {
-    INTCONbits.T0IF = 0;    // Clear the Timer 0 interrupt flag
-    TMR0 = 0;               // Load a value of 0 into the timer
-                            //   This is actually not necessary since the register will be at 0 anyway after rolling over
+    if(INTCONbits.INTF == 1)
+    {
+        INTCONbits.T0IF = 0;    // Clear the Timer 0 interrupt flag
 
-    PORTCbits.RC3 = ~PORTCbits.RC3; // Toggle the LED
+        PORTCbits.RC3 = ~PORTCbits.RC3; // Toggle the LED
+    }
+    //else if(...)
 }
 
 void main(void) 
