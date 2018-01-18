@@ -1,10 +1,10 @@
-/* TODO (just interrupt, no timer)
+/* 
  * File:   main_timer_interrupt.c
  * Author: akirik
  *
  * Created on February 23, 2016, 12:52 PM
  * 
- * Using timer with interrupt
+ * Interrupt
  * 
  *  Board connection (PICKit 2 Low Count Demo):
  *   PIN                	Module                         				  

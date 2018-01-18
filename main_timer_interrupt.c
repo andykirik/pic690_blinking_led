@@ -26,7 +26,7 @@ There is also __delay_us() for microseconds and _delay() to delay for a specific
 Note that __delay_ms() and __delay_us() begin with a double underscore whereas _delay() 
 begins with a single underscore.
 */
-#define _XTAL_FREQ 8000000
+#define _XTAL_FREQ 4000000
 
 // CONFIG
 // PIC16F690 Configuration Bit Settings
