@@ -71,7 +71,6 @@ void system_init()
 		OPTION_REGbits.PS = 0b111;  // Set the prescaler to 1:256
 		OPTION_REGbits.T0CS = 0;    // Use the instruction clock (Fcy/4) as the timer clock. 
 									//   Other option is an external oscillator or clock on the T0CKI pin.
-        //INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
 }
 
 void main(void) 

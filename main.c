@@ -46,7 +46,13 @@ void system_init()
 {
     OSCCON=0x70;          // Select 8 Mhz internal clock
 	
-	// To control Digital I/O use three registers: ANSEL, TRIS and PORT:
+	// To control Digital I/O use three registers: ANSEL, TRIS and PORT
+    // For digital I/O any port could be selected.
+    // For analog I/O select ports AN0-AN13 (use ANSEL to make selection)
+    // Any port could be either Input or Output (use TRIS to make selection)
+    // For switches or button use ports which support pull up resistors
+    //   And enable pull up resistors using RBPU in OPTION_REG
+    // Input port could trigger interrupt on change. Use IOCB and INTCON bits to configure
 
     // ANSELx registers
 	// ANSEL and ANSELH control the mode of AN0 through AN11:
@@ -72,13 +78,15 @@ void system_init()
      * Bit#:   ---7-------6------5------4------3------2------1------0-------
      * TRIS:   -|------|------|TRISA5|TRISA4|TRISA3|TRISA2|TRISA1|TRISA0|---
      * ---------------------------------------------------------------------
+     * PORTA3 is Input only, so TRISA3 is read only
+     * 
 	 * -------------------TRISB---------------------------------------------
      * Bit#:   ----7------6------5------4------3------2------1------0-------
      * TRIS:   -|TRISB7|TRISB6|TRISB5|TRISB4|------|------|------|------|---
      * ---------------------------------------------------------------------
      * -------------------TRISC---------------------------------------------
      * Bit#:   ----7------6------5------4------3------2------1------0-------
-     * TRIS:   --|TRIS?7|TRIS?6|TRIS?5|TRIS?4|TRIS?3|TRIS?2|TRIS?1|TRIS?0|--
+     * TRIS:   --|TRISC7|TRISC6|TRISC5|TRISC4|TRISC3|TRISC2|TRISC1|TRISC0|--
      * ---------------------------------------------------------------------
      */
         TRISA = 0x00;         // Set All on PORTA as Output    

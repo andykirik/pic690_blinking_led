@@ -9,9 +9,6 @@
  *  Board connection (PICKit 2 Low Count Demo):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
- *  RC0 (DS1; J1->10)         LED
- *  RC1 (DS2; J1->11)         LED
- *  RC2 (DS3; J1->12)         LED
  *  RC3 (DS4; J1->6)          LED
  * 
  *  RA0 (RP1)                 POTENCIOMETER
@@ -78,13 +75,38 @@ void system_init()
         ADCON0bits.ADON = 1;    	// Turn on the ADC
         
     // PWM setup
-        CCP1CON = 0b00001100;       // Single PWM mode; P1A, P1C active-high; P1B, P1D active-high
-        CCPR1L = 0;                 // Start with zero Duty Cycle
-        T2CON = 0b00000101;         // Postscale: 1:1, Timer2=On, Prescale = 1:4
+    // The PWM mode generates a Pulse-Width Modulated signal on the CCP1 pin. 
+    // The duty cycle, period and resolution are determined by the following registers:
+    // PR2, T2CON, CCPR1L, CCP1CON
+    // In Pulse-Width Modulation (PWM) mode, the CCP module produces up to a 10-bit resolution 
+    // PWM output on the CCP1 pin. Since the CCP1 pin is multiplexed with the PORT data latch, 
+    // the TRIS for that pin must be cleared to enable the CCP1 pin output driver.
+    // The PWM period is specified by the PR2 register of Timer2.
+    /* 
+	 * -------------------CCP1CON----------------------------------
+     * Bit#:  ---7----6----5------4-----3------2------1------0-----
+     *        -|P1M1|P1M0|DC1B1|DC1B0|CCP1M3|CCP1M2|CCP1M1|CCP1M0|-
+     * ------------------------------------------------------------
+     * P1M<1:0>: PWM Output Configuration bits
+     * DC1B<1:0>: PWM Duty Cycle Least Significant bits
+     * CCP1M<3:0>: ECCP Mode Select bits
+     * 
+     * -------------------PSTRCON----------------------------------
+     * Bit#:  ---7----6---5----4------3----2----1----0-------------
+     *        -|---|---|----|STRSYNC|STRD|STRC|STRB|STRA|----------
+     * ------------------------------------------------------------
+     * STRSYNC  - Steering Sync bit
+     * STRD     - Steering Enable bit D
+     * STRC     - Steering Enable bit C
+     * STRB     - Steering Enable bit B
+     * STRA     - Steering Enable bit A
+    */
         PR2 = 0x65;                 // Frequency: 4.90 kHz
+        T2CON = 0b00000101;         // Postscale: 1:1, Timer2=On, Prescale = 1:4
+        CCPR1L = 0;                 // Start with zero Duty Cycle
+        CCP1CON = 0b00001100;       // Single PWM mode; P1A, P1C active-high; P1B, P1D active-high
         TMR2 = 0;                   // Start with zero Counter
         PSTRCON = 0b00000100;       // Enable Pulse Steering on P1C (RC3)
-        //state=0;                  // Start with state 1
 }
 
 uint16_t ADC_GetConversion()
@@ -101,21 +123,10 @@ void main(void)
     
     while(1)  
 	{
-        uint8_t adcResult = ADC_GetConversion() >> 6;		//Start ADC conversion
-        adcResult &= 0x03FF;
-        
-        // Load duty cycle value
-        /*/if(CCP1CONbits)
-        {
-            adcResult <<= 6;
-            CCPR1H = adcResult >> 8;
-            CCPR1L = adcResult;
-        }
-        //else*/
-        {
-            CCPR1H = adcResult >> 8;
-            CCPR1L = adcResult;
-        }
+        uint8_t adcResult = ADC_GetConversion();		//Start ADC conversion
+
+        CCPR1H = adcResult >> 8;
+        CCPR1L = adcResult;
         
 		__delay_ms(50);                         // sleep 50 milliseconds
     }

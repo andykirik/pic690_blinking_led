@@ -66,14 +66,24 @@ void system_init()
      * Bit#:  ----7----6----5----4----3----2----1----0------
      *        --|GIE|PEIE|T0IE|INTE|RABIE|T0IF|INTF|RABIF|--
      * -----------------------------------------------------
+     * GIE      - global interrupt enable bit
+     * PEIE     - peripheral interrupt enable bit
+     * T0IE     - Timer 0 overflow interrupt enable bit
+     * INTE     - external interrupt enable bit
+     * RABIE    - port change interrupt enable bit
+     * T0IF     - Timer 0 overflow interrupt flag bit
+     * INTF     - external interrupt flag bit
+     * RABIF    - port change interrupt flag bit
      * 
      * -------------------OPTION_REG----------------------
      * Bit#:  ----7------6-----5----4----3---2---1---0----
      *        --|RABPU|INTEDG|T0CS|T0SE|PSA|PS2|PS1|PS0|--
      * ---------------------------------------------------
+     * INTEDG   - interrupt edge select bit
+     * 
     */
-        INTCONbits.INTF = 0;        // Reset the external interrupt flag
         OPTION_REGbits.INTEDG = 1;  // Interrupt on the rising edge
+        INTCONbits.INTF = 0;        // Reset the external interrupt flag
 		INTCONbits.INTE = 1;        // Enable external interrupt
 		INTCONbits.GIE = 1;         // Set the Global Interrupt Enable
 }
@@ -87,7 +97,7 @@ void interrupt isr()
 {
     if(INTCONbits.INTF == 1)
     {
-        INTCONbits.T0IF = 0;    // Clear the Timer 0 interrupt flag
+        INTCONbits.INTF = 0;    // Clear the Timer 0 interrupt flag
 
         PORTCbits.RC3 = ~PORTCbits.RC3; // Toggle the LED
     }

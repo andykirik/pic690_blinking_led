@@ -76,6 +76,15 @@ void system_init()
 	// The PIC16F690 has twelve analog input pins (AN0 through AN11). 
 	// In order to enable the analog function for a pin, 
 	// the corresponding bit must be set in the ANSEL or ANSELH register (see above).
+    // Steps to configure:
+    //  1. voltage reference in the ADCON1 register
+    //  2. select ADC conversion clock in the ADCON0 register
+    //  3. select one input channel CH0CH13 in the ADCON0 register
+    //  4. select data format in the ADCON1 register (ADFM)
+    //  5. enable AD converter in the ADCON0 register (ADON)
+    //  optional configure interrupt:
+    //  6. clear ADIF bit
+    //  7. set ADIE, PEIE and GIE bits (see interrupts for more instructions)
     /* 
      * -------------------ADC---------------------------------
      * Bit#:  ----7----6----5----4----3----2----1-------0-----
