@@ -7,7 +7,7 @@
  * Blinking LED
  * Digital I/O
  * 
- *  Board connection (PICKit 2 Low Count Demo):
+ *  Board connection (PICKit 2 Low Count Demo; PIC16F690):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
  *  RC0 (DS1; J1->10)         LED
@@ -27,8 +27,6 @@ begins with a single underscore.
 */
 #define _XTAL_FREQ 8000000
 
-#include <xc.h>
-
 // CONFIG
 // PIC16F690 Configuration Bit Settings
 #pragma config FOSC     = HS        // Oscillator Selection bits (HS oscillator: High-speed crystal/resonator on RA4/OSC2/CLKOUT and RA5/OSC1/CLKIN)
@@ -41,6 +39,7 @@ begins with a single underscore.
 #pragma config IESO     = ON        // Internal External Switchover bit (Internal External Switchover mode is enabled)
 #pragma config FCMEN    = ON        // Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
 
+#include <xc.h>
 
 void system_init()
 {
@@ -62,8 +61,6 @@ void system_init()
 			PORTB = 0x00;         // Set PORTB all 0
 			PORTC = 0x00;         // Set PORTC all 0    
 }
-
-static int mode = 1; // 0 - blink; 1 - rotate (need to be recompiled to change modes)
 
 void main(void) 
 {

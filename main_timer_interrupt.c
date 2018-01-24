@@ -6,7 +6,7 @@
  * 
  * Using timer with interrupt
  * 
- *  Board connection (PICKit 2 Low Count Demo):
+ *  Board connection (PICKit 2 Low Count Demo; PIC16F690):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
  *  RC0 (DS1; J1->10)         LED
@@ -16,8 +16,6 @@
  * 
  */
 
-#include <xc.h>
-
 /* The __delay_ms() function is provided by XC8. 
 It requires you define _XTAL_FREQ as the frequency of your system clock. 
 We are using the internal oscillator at its default 4MHz, so _XTAL_FREQ is defined as 4000000. 
@@ -26,7 +24,7 @@ There is also __delay_us() for microseconds and _delay() to delay for a specific
 Note that __delay_ms() and __delay_us() begin with a double underscore whereas _delay() 
 begins with a single underscore.
 */
-#define _XTAL_FREQ 4000000
+#define _XTAL_FREQ 8000000
 
 // CONFIG
 // PIC16F690 Configuration Bit Settings
@@ -39,6 +37,8 @@ begins with a single underscore.
 #pragma config BOREN 	= ON       	// Brown-out Reset Selection bits (BOR enabled)
 #pragma config IESO 	= ON        // Internal External Switchover bit (Internal External Switchover mode is enabled)
 #pragma config FCMEN 	= ON       	// Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
+
+#include <xc.h>
 
 #define EXTENDED_DELAY
 

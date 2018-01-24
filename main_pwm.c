@@ -6,7 +6,7 @@
  * 
  * PWM
  * 
- *  Board connection (PICKit 2 Low Count Demo):
+ *  Board connection (PICKit 2 Low Count Demo; PIC16F690):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
  *  RC3 (DS4; J1->6)          LED
@@ -14,10 +14,6 @@
  *  RA0 (RP1)                 POTENCIOMETER
  *
  */
-
-#include <xc.h>
-#include <stdint.h>
-#include <stdbool.h>
 
 /* The __delay_ms() function is provided by XC8. 
 It requires you define _XTAL_FREQ as the frequency of your system clock. 
@@ -40,6 +36,10 @@ begins with a single underscore.
 #pragma config BOREN = ON       // Brown-out Reset Selection bits (BOR enabled)
 #pragma config IESO = ON        // Internal External Switchover bit (Internal External Switchover mode is enabled)
 #pragma config FCMEN = ON       // Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
+
+#include <xc.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 #define PIN_A0                    0
 #define ACQ_US_DELAY              5

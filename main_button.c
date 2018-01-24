@@ -7,7 +7,7 @@
  * Switch and a LED
  * Digital I/O
  * 
- *  Board connection (PICKit 2 Low Count Demo):
+ *  Board connection (PICKit 2 Low Count Demo; PIC16F690):
  *   PIN                	Module                         				  
  * -------------------------------------------                        
  *  RC0 (DS1; J1->10)         LED
@@ -18,8 +18,6 @@
  *                                      and config MCLRE should be set to OFF
  *
  */
-
-#include <xc.h>
 
 /* The __delay_ms() function is provided by XC8. 
 It requires you define _XTAL_FREQ as the frequency of your system clock. 
@@ -43,6 +41,7 @@ begins with a single underscore.
 #pragma config IESO 	= ON        // Internal External Switchover bit (Internal External Switchover mode is enabled)
 #pragma config FCMEN 	= ON       	// Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is enabled)
 
+#include <xc.h>
 
 void system_init()
 {
