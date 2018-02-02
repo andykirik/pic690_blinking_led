@@ -7,6 +7,7 @@
  * Interrupt
  * Use Peripheral Interrupt.
  * On PICKit 2 Low Count Demo button is connected to RA3/MCLR/VPP, so we use this pin as interrupt source
+ *
  * LED 0 blinks once a second
  * LED 3 changes its state on button press
  * 

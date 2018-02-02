@@ -9,7 +9,7 @@
  * (Note, Watch Dog Timer should be disabled)
  * 
  * LED 0 blinks once a second using sleep
- * LED 3 blinks very fast using timer interrupt
+ * LED 3 blinks once a 5 seconds using timer interrupt
  * 
  *  Board connection (PICKit 2 Low Count Demo; PIC16F690):
  *   PIN                	Module                         				  
@@ -44,6 +44,20 @@ begins with a single underscore.
 
 #include <xc.h>
 
+#define TIMER_RESET_VALUE 6 // To set up the timer for a period of 1 ms (timerPeriod)
+                            // Calculated by the formula:
+                            // TMR0 = 256 - ((timerPeriod * Fosc) / (4 * prescaler)) + x
+                            // TMR1 = 65536 - ((timerPeriod * Fosc) / (4 * prescaler)) + x
+
+                            // In following case,   timerPeriod = 0.001s
+                            //                      Fosc = 4,000,000
+                            //                      prescaler = 4
+                            //                      x = 0 because prescaler is > 2
+
+                            // TMR0 = 256 - (0.001 * 4000000) / (4 * 4) = 6
+
+int delayTime = 0;          // store the time that has elapsed
+
 void system_init()
 {
     OSCCON=0x70;          // Select 8 Mhz internal clock
@@ -64,18 +78,7 @@ void system_init()
 			PORTC = 0x00;         // Set PORTC all 0
         
 	// Timer Setup - Timer 0
-    /* -------------------OPTION_REG--------------------
-     * Bit#:  ----7-----6-----5----4----3---2---1---0---
-     *    :   -|RABPU|INTEDG|T0CS|T0SE|PSA|PS2|PS1|PS0|-
-     * -------------------------------------------------
-     * RABPU: PORTA/PORTB Pull-up Enable bit
-     * INTEDG: Interrupt Edge Select bit
-     * T0CS: TMR0 Clock Source Select bit
-     * T0SE: TMR0 Source Edge Select bit
-     * PSA: Prescaler Assignment bit
-     * PS<2:0>: Prescaler Rate Select bits
-     * 
-     * A prescaler is a circuit that reduces the frequency of a clock using integer division. 
+    /* A prescaler is a circuit that reduces the frequency of a clock using integer division. 
      *  The prescaler can be set anywhere from 1:2 to 1:256 for Timer 0.
      *  The clock we are slowing down is NOT the system clock Fosc (4MHz as in here). 
      *  It's the system's instruction clock Fcy, which is always Fosc/4.
@@ -85,11 +88,11 @@ void system_init()
      *  In following case it would be 15.2588Hz or 0.0655 seconds per rollover.
     */
 		OPTION_REGbits.PSA = 0; 	// Prescaler assigned to Timer 0 
-		OPTION_REGbits.PS = 0b111;  // Set the prescaler to 1:256
+        OPTION_REGbits.PS = 0b001;  // Set the prescaler to 1:4
 		OPTION_REGbits.T0CS = 0;    // Use the instruction clock (Fcy/4) as the timer clock. 
 									//   Other option is an external oscillator or clock on the T0CKI pin.
 		INTCONbits.T0IF = 0;        // Clear the Timer 0 interrupt flag
-        TMR0 = 0;                   // Load a value of 0 into the timer
+		TMR0 = TIMER_RESET_VALUE;   // Load the starting value back into the timer
         INTCONbits.T0IE = 1;        // Enable the Timer 0 interrupt
 
 	// Interrupt setup
@@ -105,10 +108,13 @@ void system_init()
 void interrupt isr()
 {
     INTCONbits.T0IF = 0;    // Clear the Timer 0 interrupt flag
-    TMR0 = 0;               // Load a value of 0 into the timer
-                            // This is not necessary since the register will be at 0 anyway after rolling over
+    TMR0 = TIMER_RESET_VALUE;   // Load the starting value back into the timer
     
-    PORTCbits.RC3 = ~PORTCbits.RC3; // Toggle the LED
+    if(++delayTime >= 5000) // 5 seconds has elapsed
+    {
+        delayTime = 0;
+        PORTCbits.RC3 = ~PORTCbits.RC3; // Toggle the LED
+    }
 }
 
 void main(void) 
