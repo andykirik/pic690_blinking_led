@@ -41,9 +41,6 @@ begins with a single underscore.
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PIN_A0                    0
-#define ACQ_US_DELAY              5
-
 void system_init()
 {
     OSCCON=0x70;          // Select 8 Mhz internal clock
@@ -52,30 +49,17 @@ void system_init()
 		// ANSELx registers
 			ANSEL = 0x00;         // Set PORT ANS0 to ANS7 as Digital I/O
 			ANSELH = 0x00;        // Set PORT ANS8 to ANS11 as Digital I/O
-            ANSELbits.ANS0 = 1;   // Set RA0/AN0 to analog mode
 	  
 		// TRISx registers (This register specifies the data direction of each pin)
 			TRISA = 0x00;         // Set All on PORTB as Output    
 			TRISB = 0x00;         // Set All on PORTB as Output    
 			TRISC = 0x00;         // Set All on PORTC as Output    
-            TRISAbits.TRISA0 = 1; // Set RA0/AN0 as Input
 		
 		// PORT registers
 			PORTA = 0x00;         // Set PORTA all 0
 			PORTB = 0x00;         // Set PORTB all 0
 			PORTC = 0x00;         // Set PORTC all 0
-            
-    // ADC setup
-        ADCON0bits.ADFM = 1;   		// ADC result is right justified
-        ADCON0bits.VCFG = 0;    	// Vref uses Vdd as reference
-        ADCON1bits.ADCS = 0b001;	// Fosc/8 is the conversion clock
-									//   This is selected because the conversion
-									//   clock period (Tad) must be greater than 1.5us.
-									//   With a Fosc of 4MHz, Fosc/8 results in a Tad
-									//   of 2us.
-        ADCON0bits.CHS = PIN_A0;	// Select analog input - AN0
-        ADCON0bits.ADON = 1;    	// Turn on the ADC
-        
+                    
     // PWM setup
     // The PWM mode generates a Pulse-Width Modulated signal on the CCP1 pin. 
     // The duty cycle, period and resolution are determined by the following registers:
@@ -142,28 +126,45 @@ void system_init()
         while(PIR1bits.TMR2IF == 0){} // Wait until Timer2 overflows(TMR2IF bit of the PIR1 register is set).
 }
 
-uint16_t ADC_GetConversion()
-{
-    __delay_us(ACQ_US_DELAY);					// Acquisition time delay
-    ADCON0bits.GO_nDONE = 1;					// Start the conversion
-    while (ADCON0bits.GO_nDONE);				// Wait for the conversion to finish
-    return ((uint16_t)((ADRESH << 8) + ADRESL));// Conversion finished, return the result
-}
-
 void main(void) 
 {
     system_init();
     
-    while(1)
+    unsigned int ipwm = 0;
+    unsigned char mode = 0;
+    while(1)  
 	{
-        uint16_t adcResult = ADC_GetConversion(); //Start ADC conversion
+        ipwm = 0;
+        while (ipwm < 255) 
+        {
+          CCPR1L = ++ipwm;
+          __delay_ms(5);     
+        } 	                    
 
-        // set the new duty cycle
-        CCPR1H = adcResult & 0b11;    // LSB or like this: CCP1CONbits.DC1B = adcResult & 0b11;
-        CCPR1L = adcResult >> 2;      // MSB
+        ipwm = 0xff;
+        while (ipwm > 0) {
+            CCPR1L = --ipwm;
+            __delay_ms(5);   
+        }       
+
+        __delay_ms(100);     
         
-		__delay_ms(50);               // sleep 50 milliseconds
+        if (0 == mode) 
+        {
+            mode = 1;
+            PSTRCON=0b00001000;  // Enable Pulse Steering on P1D (RC2)
+        } 
+        else if (1 == mode) 
+        {
+            mode = 2;
+            PSTRCON=0b00001100;  // Enable Pulse Steering on P1C and P1D (RC3 and RC2)
+        } 
+        else 
+        {
+            mode = 0;
+            PSTRCON=0b00000100;  // Enable Pulse Steering on P1C (RC3)
+        }
     }
     
-  return;
+    return;
 }
