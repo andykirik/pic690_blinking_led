@@ -64,7 +64,7 @@ void system_init()
      *  The clock we are slowing down is NOT the system clock Fosc (250 kHz as in here). 
      *  It's the system's instruction clock Fcy, which is always Fosc/4.
      *  The timer expires when the TMR0 register rolls over. 
-     *  The TMR0 register is an 8bit register, therefore it will roll over after 256 counts.
+     *  The TMR0 register is an 8 bit register, therefore it will roll over after 256 counts.
      *  Rollover Frequency = Fosc / (4 * prescaler * 256)
      *  In following case it would be 0.95 Hz or 1.04 seconds per rollover.
     */
